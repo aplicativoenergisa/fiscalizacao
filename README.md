@@ -120,3 +120,13 @@ Após confirmar uma fiscalização, o painel da equipe permite salvar uma ou mai
 Na inicial, fiscalizadas/pendentes são do ciclo atual; NC abertas/regularizadas abrangem todos os ciclos. No histórico, filtros de mês/ciclo/empresa/equipe também controlam os indicadores: fiscalizações contam eventos de confirmação, NC abertas contam aberturas no período (incluindo as posteriormente regularizadas), e regularizadas contam datas de regularização no período. O estoque atualmente aberto é exibido separadamente. Barras com valores visíveis comparam os ciclos do mês selecionado; o histórico original permanece abaixo.
 
 Validação: testes PGlite descartáveis para persistência entre ciclos, RLS, idempotência e preservação de auditoria; E2E em viewports 390 e 412 px com duas sessões e Realtime simulado. Não executar o teste live para validar esta funcionalidade em produção.
+
+## Cadastro manual de equipes
+
+Migration `202609180002_team_management.sql` (após não conformidades): mantém os 43 IDs originais, adiciona geração de IDs, status Ativa/Inativa, versão do cadastro e auditoria `team_events`. Substitui a unicidade global do nome por unicidade dentro da empresa, ignorando caixa e espaços extras; inclui inativas na validação.
+
+“Adicionar Equipe” está na inicial e dentro de cada empresa. Empresa, nome/código e tipo são obrigatórios. As únicas empresas aceitas na interface e na RPC são RALT, JVP, DSX e ENGELMIG. “Editar cadastro” corrige empresa, nome e tipo, ou altera Ativa/Inativa. Não existe exclusão pelo aplicativo. Edições concorrentes exigem reabrir o formulário; repetições de requisições não duplicam cadastros.
+
+A equipe ativa sem fiscalização no ciclo atual aparece em A Fiscalizar, sem gerar eventos artificiais. Os totais, percentuais e cartões usam equipes ativas do Supabase. As inativas têm aba própria, continuam nos filtros e gráficos do histórico e permitem regularizar suas não conformidades. Reativar recupera o estado real do ciclo, sem apagar fiscalizações. Cadastro, edição e inativação são propagados por Realtime. A auditoria guarda os dados anteriores/posteriores; a referência das fiscalizações continua sendo o ID estável da equipe.
+
+Validação local: cadastro e repetição idempotente, duplicidade normalizada na mesma empresa, mesmo nome em empresas diferentes, concorrência, edição, inativação/reativação, preservação de NC e eventos, RLS e bloqueio de quinta empresa. Teste de duas sessões em larguras 390/412 px, com banco PGlite descartável e Realtime simulado. Nenhuma equipe de teste é criada em produção.

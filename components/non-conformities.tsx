@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { cycleAt, formatTime } from "@/lib/cycle";
-import teams from "@/lib/teams.json";
+import type { Team } from "@/lib/team";
 export type NonConformity = {
   id: string;
   team_id: number;
@@ -99,7 +99,7 @@ export function NonConformityDialog({
   refresh,
   close,
 }: {
-  team: (typeof teams)[number];
+  team: Team;
   items: NonConformity[];
   db: SupabaseClient | null;
   canOpen: boolean;
@@ -244,6 +244,7 @@ export function NonConformityDialog({
   );
 }
 export function HistoryInsights({
+  teams,
   items,
   events,
   month,
@@ -254,6 +255,7 @@ export function HistoryInsights({
   loading,
 }: {
   items: NonConformity[];
+  teams: Team[];
   events: { action: string; cycle_id: string }[];
   month: string;
   half: string;

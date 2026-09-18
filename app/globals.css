@@ -836,3 +836,66 @@ dialog::backdrop {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+.add-team,
+.edit-team {
+  padding: 12px 16px;
+  min-height: 44px;
+  border: 1px solid #b6cfc4;
+  border-radius: 10px;
+  background: #edf5ef;
+  color: #164b37;
+  font: inherit;
+  cursor: pointer;
+}
+.edit-team {
+  width: 100%;
+  margin-top: 6px;
+  font-size: 12px;
+}
+.team-editor {
+  max-height: 85dvh;
+  overflow-y: auto;
+}
+.team-editor label {
+  display: block;
+  margin: 14px 0;
+  font-size: 14px;
+}
+.team-editor input,
+.team-editor select {
+  display: block;
+  margin-top: 7px;
+  width: 100%;
+  min-width: 0;
+  padding: 12px;
+  font: inherit;
+  border: 1px solid #b4c7bd;
+  border-radius: 9px;
+  background: white;
+}
+.team-editor p {
+  font-size: 13px;
+  line-height: 1.6;
+}
+.team.inactive {
+  opacity: 0.65;
+  border-color: #b6c1bc;
+  background: #f0f3f1;
+}
+.tabs {
+  flex-wrap: wrap;
+}
+@media (max-width: 600px) {
+  .section-title {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .section-title .add-team {
+    font-size: 13px;
+  }
+  .tabs button {
+    font-size: 12px;
+    padding: 12px 8px;
+  }
+}

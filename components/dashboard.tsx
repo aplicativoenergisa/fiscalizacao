@@ -1,7 +1,9 @@
 "use client";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import teams from "@/lib/teams.json";
+import initialTeams from "@/lib/teams.json";
+import { type Team, COMPANIES } from "@/lib/team";
+import { TeamEditor } from "./team-editor";
 import { cycleAt, formatTime } from "@/lib/cycle";
 import { getSupabase } from "@/lib/supabase";
 
@@ -12,7 +14,6 @@ import {
   HistoryInsights,
 } from "./non-conformities";
 
-type Team = (typeof teams)[number];
 type Inspection = {
   team_id: number;
   cycle_id: string;
@@ -27,17 +28,23 @@ type Event = {
   occurred_at: string;
   version: number;
 };
-const companies = ["RALT", "JVP", "DSX", "ENGELMIG"];
+const companies = COMPANIES;
 export default function Dashboard() {
   const [db] = useState(getSupabase);
   const nc = useNonConformities(db);
+  const [teams, setTeams] = useState<Team[]>(
+    initialTeams.map((t) => ({ ...t, active: true, version: 0 })),
+  );
+  const activeTeams = teams.filter((t) => t.active);
+  const total = activeTeams.length;
+  const [editor, setEditor] = useState<{ team: Team | null } | null>(null);
   const [ncTeam, setNcTeam] = useState<Team | null>(null);
   const [cycle, setCycle] = useState<ReturnType<typeof cycleAt> | null>(null);
   const [rows, setRows] = useState<Inspection[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [company, setCompany] = useState<string | null>(null);
   const [page, setPage] = useState<"companies" | "history">("companies");
-  const [tab, setTab] = useState<"pending" | "done">("pending");
+  const [tab, setTab] = useState<"pending" | "done" | "inactive">("pending");
   const [loading, setLoading] = useState(true),
     [busy, setBusy] = useState(false);
   const [error, setError] = useState(""),
@@ -70,6 +77,22 @@ export default function Dashboard() {
       }
       return;
     }
+    const allTeams: Team[] = [];
+    for (let offset = 0; ; offset += 1000) {
+      const result = await db
+        .from("teams")
+        .select("*")
+        .order("id")
+        .range(offset, offset + 999);
+      if (seq !== sequence.current) return;
+      if (result.error) {
+        setError("Não foi possível atualizar as equipes. Tente novamente.");
+        setLoading(false);
+        return;
+      }
+      allTeams.push(...result.data);
+      if (result.data.length < 1000) break;
+    }
     const result = await db
       .from("inspections")
       .select("*")
@@ -87,6 +110,7 @@ export default function Dashboard() {
         ),
       );
       setRows(result.data);
+      setTeams(allTeams);
       setError("");
     }
     setLoading(false);
@@ -121,7 +145,7 @@ export default function Dashboard() {
     }
     setEvents(all);
     setHistoryLoading(false);
-  }, [db, month, half, filterCompany, filterTeam]);
+  }, [db, month, half, filterCompany, filterTeam, teams]);
   useEffect(() => {
     const initialTimer = setTimeout(() => {
       const initial = cycleAt();
@@ -135,6 +159,11 @@ export default function Dashboard() {
     if (!db) return () => clearTimeout(initialTimer);
     const channel = db
       .channel("fiscalizacao")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "teams" },
+        () => void refresh(),
+      )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "inspections" },
@@ -208,7 +237,9 @@ export default function Dashboard() {
     () => new Map(rows.map((row) => [row.team_id, row])),
     [rows],
   );
-  const done = rows.filter((row) => row.inspected_at).length;
+  const done = activeTeams.filter(
+    (t) => indexed.get(t.id)?.inspected_at,
+  ).length;
   async function confirm() {
     if (!db || !selected || busy) return;
     setBusy(true);
@@ -251,9 +282,12 @@ export default function Dashboard() {
   const shown = teams.filter(
     (t) =>
       t.company_id === company &&
-      (tab === "done"
-        ? !!indexed.get(t.id)?.inspected_at
-        : !indexed.get(t.id)?.inspected_at),
+      (tab === "inactive"
+        ? !t.active
+        : t.active &&
+          (tab === "done"
+            ? !!indexed.get(t.id)?.inspected_at
+            : !indexed.get(t.id)?.inspected_at)),
   );
   return (
     <>
@@ -331,7 +365,7 @@ export default function Dashboard() {
                 },
                 {
                   label: "Ainda a fiscalizar",
-                  value: db && !loading ? 43 - done : "—",
+                  value: db && !loading ? total - done : "—",
                 },
                 {
                   label: "NC em aberto · todos os ciclos",
@@ -361,31 +395,42 @@ export default function Dashboard() {
               <div className="numbers">
                 <strong>
                   {db && !loading ? done : "—"}
-                  <span> / 43</span>
+                  <span> / {total}</span>
                 </strong>
                 <span>
-                  {db && !loading ? Math.round((done / 43) * 100) : "—"}%
-                  <small>concluído</small>
+                  {db && !loading
+                    ? total
+                      ? Math.round((done / total) * 100)
+                      : 0
+                    : "—"}
+                  %<small>concluído</small>
                 </span>
               </div>
               <progress
-                max={43}
+                max={total || 1}
                 value={db ? done : 0}
                 aria-label="Equipes fiscalizadas"
               />
               <p>
                 {db && !loading
-                  ? `Faltam ${43 - done} equipes neste ciclo`
+                  ? `Faltam ${total - done} equipes neste ciclo`
                   : "Aguardando dados do Supabase"}
               </p>
             </section>
             <div className="section-title">
               <h2>Empresas</h2>
-              <span>4 empresas · 43 equipes</span>
+              <button
+                className="add-team"
+                disabled={!db || loading || !online || !!error}
+                onClick={() => setEditor({ team: null })}
+              >
+                Adicionar Equipe
+              </button>
+              <span>4 empresas · {total} equipes ativas</span>
             </div>
             <div className="companies">
               {companies.map((name) => {
-                const list = teams.filter((t) => t.company_id === name),
+                const list = activeTeams.filter((t) => t.company_id === name),
                   count = list.filter(
                     (t) => indexed.get(t.id)?.inspected_at,
                   ).length;
@@ -447,9 +492,16 @@ export default function Dashboard() {
             <div className="eyebrow">{cycle?.id}</div>
             <h1>{company}</h1>
             <p className="subtitle">
-              {teams.filter((t) => t.company_id === company).length} equipes ·{" "}
-              {cycle?.period}
+              {activeTeams.filter((t) => t.company_id === company).length}{" "}
+              equipes ativas · {cycle?.period}
             </p>
+            <button
+              className="add-team"
+              disabled={!db || loading || !online || !!error}
+              onClick={() => setEditor({ team: null })}
+            >
+              Adicionar Equipe
+            </button>
             <div
               className="tabs"
               role="tablist"
@@ -462,7 +514,7 @@ export default function Dashboard() {
               >
                 A Fiscalizar (
                 {
-                  teams.filter(
+                  activeTeams.filter(
                     (t) =>
                       t.company_id === company &&
                       !indexed.get(t.id)?.inspected_at,
@@ -477,11 +529,23 @@ export default function Dashboard() {
               >
                 Finalizadas (
                 {
-                  teams.filter(
+                  activeTeams.filter(
                     (t) =>
                       t.company_id === company &&
                       indexed.get(t.id)?.inspected_at,
                   ).length
+                }
+                )
+              </button>
+              <button
+                role="tab"
+                aria-selected={tab === "inactive"}
+                onClick={() => setTab("inactive")}
+              >
+                Inativas (
+                {
+                  teams.filter((t) => t.company_id === company && !t.active)
+                    .length
                 }
                 )
               </button>
@@ -495,9 +559,11 @@ export default function Dashboard() {
                   return (
                     <div className="team-entry" key={team.id}>
                       <button
-                        disabled={!db || !online || busy || !!error}
+                        disabled={
+                          !db || !online || busy || !!error || !team.active
+                        }
                         key={team.id}
-                        className={`team ${row?.inspected_at ? "done" : "pending"}`}
+                        className={`team ${!team.active ? "inactive" : row?.inspected_at ? "done" : "pending"}`}
                         onClick={() =>
                           setSelected({ team, row, cycle: cycle!.id })
                         }
@@ -509,9 +575,11 @@ export default function Dashboard() {
                           <strong>{team.name}</strong>
                           <small>{team.kind}</small>
                           <span className="team-status">
-                            {row?.inspected_at
-                              ? `Fiscalizada · ${formatTime(row.inspected_at)}`
-                              : "A Fiscalizar"}
+                            {!team.active
+                              ? "Inativa · histórico preservado"
+                              : row?.inspected_at
+                                ? `Fiscalizada · ${formatTime(row.inspected_at)}`
+                                : "A Fiscalizar"}
                           </span>
                         </span>
                         <span aria-hidden>›</span>
@@ -530,6 +598,14 @@ export default function Dashboard() {
                           : "—"}{" "}
                         em aberto
                       </button>
+                      <button
+                        className="edit-team"
+                        aria-label={`Editar cadastro ${team.name}`}
+                        disabled={!db || loading || !online || !!error}
+                        onClick={() => setEditor({ team })}
+                      >
+                        Editar cadastro
+                      </button>
                     </div>
                   );
                 })}
@@ -537,14 +613,18 @@ export default function Dashboard() {
                   <div className="empty">
                     <span>✓</span>
                     <h2>
-                      {tab === "pending"
-                        ? "Tudo certo por aqui!"
-                        : "Nenhuma equipe finalizada"}
+                      {tab === "inactive"
+                        ? "Nenhuma equipe inativa"
+                        : tab === "pending"
+                          ? "Tudo certo por aqui!"
+                          : "Nenhuma equipe finalizada"}
                     </h2>
                     <p>
-                      {tab === "pending"
-                        ? "Todas as equipes desta empresa foram fiscalizadas neste ciclo."
-                        : "As fiscalizações confirmadas aparecerão aqui."}
+                      {tab === "inactive"
+                        ? "Equipes desativadas ficam aqui, com seu histórico preservado."
+                        : tab === "pending"
+                          ? "Todas as equipes desta empresa foram fiscalizadas neste ciclo."
+                          : "As fiscalizações confirmadas aparecerão aqui."}
                     </p>
                   </div>
                 )}
@@ -605,6 +685,7 @@ export default function Dashboard() {
                     .map((t) => (
                       <option key={t.id} value={t.id}>
                         {t.name}
+                        {!t.active ? " (Inativa)" : ""}
                       </option>
                     ))}
                 </select>
@@ -612,6 +693,7 @@ export default function Dashboard() {
             </div>
             <HistoryInsights
               items={nc.items}
+              teams={teams}
               events={events}
               month={month}
               half={half}
@@ -689,13 +771,35 @@ export default function Dashboard() {
           ◷ <span>Histórico</span>
         </button>
       </nav>
+      {editor && db && (
+        <TeamEditor
+          team={editor.team}
+          company={company}
+          db={db}
+          online={online}
+          close={() => setEditor(null)}
+          onSaved={(saved) => {
+            sequence.current++;
+            setTeams((old) =>
+              [...old.filter((t) => t.id !== saved.id), saved].sort(
+                (a, b) => a.id - b.id,
+              ),
+            );
+            setNotice("Cadastro salvo. Histórico preservado.");
+            void refresh();
+          }}
+        />
+      )}
       {ncTeam && (
         <NonConformityDialog
           key={ncTeam.id}
           team={ncTeam}
           items={nc.items.filter((n) => n.team_id === ncTeam.id)}
           db={db}
-          canOpen={!!indexed.get(ncTeam.id)?.inspected_at}
+          canOpen={
+            !!teams.find((t) => t.id === ncTeam.id)?.active &&
+            !!indexed.get(ncTeam.id)?.inspected_at
+          }
           online={online && !nc.error}
           refresh={nc.refresh}
           close={() => setNcTeam(null)}
