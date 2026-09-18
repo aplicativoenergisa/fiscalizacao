@@ -80,7 +80,7 @@ O manifest possui nome, modo standalone, ícones 192/512 e maskable; iOS possui 
 
 ## Logos e atualização
 
-Substitua os placeholders em `public/logos/ralt.png`, `jvp.png`, `dsx.png` e `engelmig.png` pelos logos reais mantendo os nomes. Os ícones do aplicativo ficam em `public/`.
+As logos fornecidas pelo proprietário estão em `public/logos/ralt.png`, `jvp.png`, `dsx.png` e `engelmig.png`, em versões PNG tratadas para nitidez a partir dos JPEGs enviados. Os cartões preservam as proporções com `object-fit: contain` e mantêm o nome da empresa visível ao lado. Os ícones do aplicativo ficam em `public/`.
 
 Para atualizar: altere o código, execute os checks abaixo, crie commit e faça push na main. A integração GitHub/Vercel publica automaticamente. Mudanças de banco devem ser novas migrations, nunca apagar histórico. Ao mudar arquivos offline, incremente `CACHE` em `public/sw.js`. A aplicação principal usa rede, não um cache de HTML antigo.
 

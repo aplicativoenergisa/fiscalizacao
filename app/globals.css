@@ -228,7 +228,7 @@ progress::-moz-progress-bar {
   padding: 22px;
   border-radius: 16px;
   display: grid;
-  grid-template-columns: 56px 1fr auto;
+  grid-template-columns: 112px minmax(0, 1fr) auto;
   align-items: center;
   gap: 14px;
   text-align: left;
@@ -244,9 +244,9 @@ progress::-moz-progress-bar {
 }
 .logo {
   position: relative;
-  height: 50px;
-  width: 56px;
-  background: #f2f4ef;
+  height: 96px;
+  width: 112px;
+  background: #fff;
   border-radius: 8px;
   display: grid;
   place-items: center;
@@ -259,10 +259,6 @@ progress::-moz-progress-bar {
   height: 100%;
   object-fit: contain;
   z-index: 1;
-}
-.logo > span {
-  font-size: 10px;
-  font-weight: 900;
 }
 .company-info strong {
   font-size: 17px;
@@ -686,5 +682,29 @@ dialog::backdrop {
 @media (max-width: 600px) {
   .filters label:first-child {
     grid-column: 1/-1;
+  }
+}
+@media (max-width: 380px) {
+  .company-card {
+    grid-template-columns: 86px minmax(0, 1fr) auto;
+    gap: 10px;
+    padding: 16px;
+  }
+  .logo {
+    width: 86px;
+    height: 88px;
+  }
+  .company-info strong {
+    font-size: 15px;
+  }
+  .company-info small {
+    font-size: 11px;
+    line-height: 1.4;
+  }
+  .company-count {
+    font-size: 21px;
+  }
+  .company-count > span {
+    display: block;
   }
 }

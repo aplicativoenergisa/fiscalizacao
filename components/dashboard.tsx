@@ -356,16 +356,15 @@ export default function Dashboard() {
                   >
                     <span className={`logo logo-${name.toLowerCase()}`}>
                       <Image
-                        unoptimized
-                        width={56}
-                        height={50}
+                        width={224}
+                        height={192}
+                        sizes="(max-width: 380px) 86px, 112px"
                         src={`/logos/${name.toLowerCase()}.png`}
                         alt={`Logo ${name}`}
                         onError={(e) => {
                           e.currentTarget.style.display = "none";
                         }}
                       />
-                      <span>{name}</span>
                     </span>
                     <span className="company-info">
                       <strong>{name}</strong>
