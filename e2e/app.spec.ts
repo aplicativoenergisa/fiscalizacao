@@ -14,6 +14,12 @@ test("duas sessões mobile: marcar, Realtime simulado, recarregar, desfazer e hi
   await db.exec(
     readFileSync("supabase/migrations/202609170002_seed.sql", "utf8"),
   );
+  await db.exec(
+    readFileSync(
+      "supabase/migrations/202609180001_non_conformities.sql",
+      "utf8",
+    ),
+  );
   const contexts = await Promise.all([
     browser.newContext({
       viewport: { width: 390, height: 844 },
@@ -124,6 +130,34 @@ test("duas sessões mobile: marcar, Realtime simulado, recarregar, desfazer e hi
               }),
             20,
           );
+        } else if (url.pathname.endsWith("/rpc/open_non_conformity")) {
+          data = (
+            await db.query("select * from open_non_conformity($1,$2,$3)", [
+              body.p_id,
+              body.p_team_id,
+              body.p_description,
+            ])
+          ).rows[0];
+          setTimeout(
+            () => subscribers.forEach((send) => send("non_conformities")),
+            20,
+          );
+        } else if (url.pathname.endsWith("/rpc/resolve_non_conformity")) {
+          data = (
+            await db.query("select * from resolve_non_conformity($1)", [
+              body.p_id,
+            ])
+          ).rows[0];
+          setTimeout(
+            () => subscribers.forEach((send) => send("non_conformities")),
+            20,
+          );
+        } else if (url.pathname.endsWith("/non_conformities")) {
+          data = (
+            await db.query(
+              "select * from non_conformities order by opened_at desc",
+            )
+          ).rows;
         } else if (url.pathname.endsWith("/inspections"))
           data = (
             await db.query("select * from inspections where cycle_id=$1", [
@@ -159,6 +193,43 @@ test("duas sessões mobile: marcar, Realtime simulado, recarregar, desfazer e hi
   await expect(b.getByRole("button", { name: /RAL-B2 01/ })).toHaveCount(0, {
     timeout: 5000,
   });
+  await expect(
+    a.getByRole("dialog", { name: /Não conformidades/ }),
+  ).toBeVisible();
+  await a.getByLabel("Descrição da não conformidade").fill("EPI danificado");
+  await a.getByRole("button", { name: "Salvar não conformidade" }).click();
+  await expect(a.getByText("EPI danificado", { exact: true })).toBeVisible();
+  await a
+    .getByLabel("Descrição da não conformidade")
+    .fill("Sinalização ausente");
+  await a.getByRole("button", { name: "Salvar não conformidade" }).click();
+  await expect(
+    a.getByText("Sinalização ausente", { exact: true }),
+  ).toBeVisible();
+  await a.getByRole("button", { name: "Fechar", exact: true }).click();
+  await b.getByRole("tab", { name: /Finalizadas/ }).click();
+  await expect(
+    b.getByRole("button", { name: "Não conformidades · 2 em aberto" }),
+  ).toBeVisible();
+  await b
+    .getByRole("button", { name: "Não conformidades · 2 em aberto" })
+    .click();
+  await b
+    .getByRole("button", { name: "Marcar como regularizada" })
+    .first()
+    .click();
+  await expect(b.getByText("Regularizada", { exact: true })).toBeVisible();
+  await b.getByRole("button", { name: "Fechar", exact: true }).click();
+  await a.getByRole("tab", { name: /Finalizadas/ }).click();
+  await expect(
+    a.getByRole("button", { name: "Não conformidades · 1 em aberto" }),
+  ).toBeVisible();
+  for (const page of [a, b])
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
   await b.reload();
   await b.getByRole("button", { name: /Logo RALT/ }).click();
   await b.getByRole("tab", { name: /Finalizadas/ }).click();

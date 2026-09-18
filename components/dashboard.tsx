@@ -5,6 +5,13 @@ import teams from "@/lib/teams.json";
 import { cycleAt, formatTime } from "@/lib/cycle";
 import { getSupabase } from "@/lib/supabase";
 
+import {
+  useNonConformities,
+  Metrics,
+  NonConformityDialog,
+  HistoryInsights,
+} from "./non-conformities";
+
 type Team = (typeof teams)[number];
 type Inspection = {
   team_id: number;
@@ -23,6 +30,8 @@ type Event = {
 const companies = ["RALT", "JVP", "DSX", "ENGELMIG"];
 export default function Dashboard() {
   const [db] = useState(getSupabase);
+  const nc = useNonConformities(db);
+  const [ncTeam, setNcTeam] = useState<Team | null>(null);
   const [cycle, setCycle] = useState<ReturnType<typeof cycleAt> | null>(null);
   const [rows, setRows] = useState<Inspection[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
@@ -228,6 +237,7 @@ export default function Dashboard() {
       ) as Inspection;
       sequence.current++;
       setRows((old) => [...old.filter((r) => r.team_id !== row.team_id), row]);
+      if (!selected.row?.inspected_at) setNcTeam(selected.team);
       setNotice(
         selected.row?.inspected_at
           ? "Equipe retornou para A Fiscalizar. Histórico preservado."
@@ -259,6 +269,14 @@ export default function Dashboard() {
         </span>
       </header>
       <main>
+        {nc.error && (
+          <div className="alert" role="alert">
+            {nc.error}
+            <button onClick={() => void nc.refresh()}>
+              Atualizar não conformidades
+            </button>
+          </div>
+        )}
         {!db && (
           <div className="alert" role="alert">
             <strong>Conecte o Supabase para começar</strong>
@@ -304,6 +322,33 @@ export default function Dashboard() {
             <p className="subtitle">
               Escolha uma empresa para registrar a fiscalização.
             </p>
+            <Metrics
+              values={[
+                {
+                  label: "Fiscalizadas neste ciclo",
+                  value: db && !loading ? done : "—",
+                  tone: "success",
+                },
+                {
+                  label: "Ainda a fiscalizar",
+                  value: db && !loading ? 43 - done : "—",
+                },
+                {
+                  label: "NC em aberto · todos os ciclos",
+                  value: nc.ready
+                    ? nc.items.filter((n) => n.status === "open").length
+                    : "—",
+                  tone: "warning",
+                },
+                {
+                  label: "NC regularizadas · todos os ciclos",
+                  value: nc.ready
+                    ? nc.items.filter((n) => n.status === "resolved").length
+                    : "—",
+                  tone: "success",
+                },
+              ]}
+            />
             <section className="summary" aria-label="Progresso geral">
               <div className="summary-top">
                 <span>
@@ -448,28 +493,44 @@ export default function Dashboard() {
                 {shown.map((team) => {
                   const row = indexed.get(team.id);
                   return (
-                    <button
-                      disabled={!db || !online || busy || !!error}
-                      key={team.id}
-                      className={`team ${row?.inspected_at ? "done" : "pending"}`}
-                      onClick={() =>
-                        setSelected({ team, row, cycle: cycle!.id })
-                      }
-                    >
-                      <span className="status-icon" aria-hidden>
-                        {row?.inspected_at ? "✓" : "!"}
-                      </span>
-                      <span>
-                        <strong>{team.name}</strong>
-                        <small>{team.kind}</small>
-                        <span className="team-status">
-                          {row?.inspected_at
-                            ? `Fiscalizada · ${formatTime(row.inspected_at)}`
-                            : "A Fiscalizar"}
+                    <div className="team-entry" key={team.id}>
+                      <button
+                        disabled={!db || !online || busy || !!error}
+                        key={team.id}
+                        className={`team ${row?.inspected_at ? "done" : "pending"}`}
+                        onClick={() =>
+                          setSelected({ team, row, cycle: cycle!.id })
+                        }
+                      >
+                        <span className="status-icon" aria-hidden>
+                          {row?.inspected_at ? "✓" : "!"}
                         </span>
-                      </span>
-                      <span aria-hidden>›</span>
-                    </button>
+                        <span>
+                          <strong>{team.name}</strong>
+                          <small>{team.kind}</small>
+                          <span className="team-status">
+                            {row?.inspected_at
+                              ? `Fiscalizada · ${formatTime(row.inspected_at)}`
+                              : "A Fiscalizar"}
+                          </span>
+                        </span>
+                        <span aria-hidden>›</span>
+                      </button>
+                      <button
+                        className={`nc-team-button ${nc.items.some((n) => n.team_id === team.id && n.status === "open") ? "nc-warning" : ""}`}
+                        disabled={!db || !nc.ready}
+                        onClick={() => setNcTeam(team)}
+                      >
+                        Não conformidades ·{" "}
+                        {nc.ready
+                          ? nc.items.filter(
+                              (n) =>
+                                n.team_id === team.id && n.status === "open",
+                            ).length
+                          : "—"}{" "}
+                        em aberto
+                      </button>
+                    </div>
                   );
                 })}
                 {shown.length === 0 && (
@@ -549,6 +610,16 @@ export default function Dashboard() {
                 </select>
               </label>
             </div>
+            <HistoryInsights
+              items={nc.items}
+              events={events}
+              month={month}
+              half={half}
+              company={filterCompany}
+              team={filterTeam}
+              ready={nc.ready && !nc.error}
+              loading={historyLoading}
+            />
             <p className="history-count">
               {historyLoading
                 ? "Atualizando registros…"
@@ -618,6 +689,18 @@ export default function Dashboard() {
           ◷ <span>Histórico</span>
         </button>
       </nav>
+      {ncTeam && (
+        <NonConformityDialog
+          key={ncTeam.id}
+          team={ncTeam}
+          items={nc.items.filter((n) => n.team_id === ncTeam.id)}
+          db={db}
+          canOpen={!!indexed.get(ncTeam.id)?.inspected_at}
+          online={online && !nc.error}
+          refresh={nc.refresh}
+          close={() => setNcTeam(null)}
+        />
+      )}
       <dialog
         ref={dialog}
         onCancel={(e) => {

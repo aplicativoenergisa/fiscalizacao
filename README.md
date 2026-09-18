@@ -110,3 +110,13 @@ A configuração Playwright padrão executa somente o teste local com banco em m
 - `tests/`, `e2e/`: testes automatizados.
 
 Referências: [Next.js PWA](https://nextjs.org/docs/app/guides/progressive-web-apps), [Supabase RLS](https://supabase.com/docs/guides/database/postgres/row-level-security), [Database Functions](https://supabase.com/docs/guides/database/functions), [Postgres Changes](https://supabase.com/docs/guides/realtime/postgres-changes).
+
+## Não conformidades e indicadores
+
+Migration aditiva: `supabase/migrations/202609180001_non_conformities.sql`. Aplicar após as duas migrations originais. Não reaplicar schema/seed existentes. A nova tabela possui RLS, leitura pública, escrita somente via RPC e publicação Realtime, seguindo o modelo sem login do app.
+
+Após confirmar uma fiscalização, o painel da equipe permite salvar uma ou mais descrições (até 2.000 caracteres). O botão “Não conformidades” permanece disponível em A Fiscalizar e Finalizadas, com contador de pendências. Cada registro aponta para a equipe e para o evento de fiscalização de origem. Regularizar é uma transição definitiva, com data do servidor: descrição, vínculo, abertura e regularização ficam preservados, mesmo ao desfazer a fiscalização ou mudar de ciclo. Não há exclusão nem edição do relato.
+
+Na inicial, fiscalizadas/pendentes são do ciclo atual; NC abertas/regularizadas abrangem todos os ciclos. No histórico, filtros de mês/ciclo/empresa/equipe também controlam os indicadores: fiscalizações contam eventos de confirmação, NC abertas contam aberturas no período (incluindo as posteriormente regularizadas), e regularizadas contam datas de regularização no período. O estoque atualmente aberto é exibido separadamente. Barras com valores visíveis comparam os ciclos do mês selecionado; o histórico original permanece abaixo.
+
+Validação: testes PGlite descartáveis para persistência entre ciclos, RLS, idempotência e preservação de auditoria; E2E em viewports 390 e 412 px com duas sessões e Realtime simulado. Não executar o teste live para validar esta funcionalidade em produção.
