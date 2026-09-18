@@ -95,7 +95,9 @@ pnpm exec playwright test
 
 Os testes unitários usam o Node nativo. Os testes SQL executam as migrations reais em PGlite (PostgreSQL embutido), com roles anon/authenticated. O teste de interface usa Edge instalado, duas sessões em tamanhos mobile e um transporte Supabase simulado sobre o SQL real. Ele não depende da chave real e não comprova o serviço Realtime hospedado. Em Linux, instale Edge ou altere `channel` no `playwright.config.ts` e instale Chromium via Playwright.
 
-Após configurar o Supabase real, faça a aceitação em duas abas/aparelhos: marque uma equipe, observe a outra aba sem refresh, recarregue, confira Finalizadas/data/hora/cartão verde, retorne a equipe e confirme o evento no Histórico. Isso cria eventos reais de teste que permanecerão na auditoria. Teste também instalação iOS/Android por HTTPS. O teste real já foi aprovado nesta entrega; consulte `VALIDACAO.md`. Para repetir conscientemente (gera novos eventos): rode `pnpm build`, inicie `pnpm start --port 3002`, defina `RUN_LIVE_SUPABASE=yes` no terminal e execute `pnpm exec playwright test --config playwright.live.config.ts`.
+A validação real do Supabase foi concluída antes da limpeza de pré-operação. Os seis eventos de teste foram removidos de forma pontual a pedido do proprietário; o banco foi conferido com 43 equipes pendentes e histórico vazio. Consulte `VALIDACAO.md` para os identificadores e resultados.
+
+A configuração Playwright padrão executa somente o teste local com banco em memória e transporte simulado; chamadas REST externas são bloqueadas. O arquivo `e2e/live.spec.ts` é mantido como referência da validação anterior, fora da suíte padrão. Não o execute no banco oficial: ele cria eventos permanentes. Testes posteriores à limpeza devem usar `pnpm test` e `pnpm exec playwright test`. A instalação em aparelhos físicos ainda pode ser validada após o deploy sem marcar equipes.
 
 ## Arquivos principais
 

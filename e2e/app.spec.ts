@@ -95,9 +95,11 @@ test("duas sessões mobile: marcar, Realtime simulado, recarregar, desfazer e hi
           send("phx_reply", { status: "ok", response: {} }, packet.ref);
       });
     });
-    await context.route("http://localhost:54321/rest/v1/**", async (route) => {
+    await context.route("**/rest/v1/**", async (route) => {
       const url = new URL(route.request().url()),
         body = route.request().postDataJSON();
+      // Fail closed if a misconfigured preview points at a hosted database.
+      if (url.origin !== "http://localhost:54321") return route.abort();
       try {
         let data: unknown;
         if (url.pathname.endsWith("/rpc/current_inspection_cycle"))
