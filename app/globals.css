@@ -953,7 +953,7 @@ dialog::backdrop {
   background: #188365;
 }
 .cycle-summary-row.warning .cycle-summary-track > span {
-  background: #c58335;
+  background: #b42318;
 }
 @media (max-width: 380px) {
   .cycle-summary {
