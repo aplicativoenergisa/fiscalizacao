@@ -305,7 +305,11 @@ test("duas sessões mobile: marcar, Realtime simulado, recarregar, desfazer e hi
     a.locator("button.team").filter({ hasText: "NOVA-TESTE" }),
   ).toBeVisible();
   await a
-    .getByRole("button", { name: "Editar cadastro NOVA-TESTE", exact: true })
+    .getByRole("button", { name: "Gerenciar Equipes", exact: true })
+    .click();
+  await a
+    .getByRole("dialog")
+    .getByRole("button", { name: /NOVA-TESTE/ })
     .click();
   await a.getByLabel("Nome/código da equipe").fill("NOVA-CORRIGIDA");
   await a
@@ -318,10 +322,11 @@ test("duas sessões mobile: marcar, Realtime simulado, recarregar, desfazer e hi
   ).toBeVisible();
   await expect(b.getByText("4 empresas · 43 equipes ativas")).toBeVisible();
   await a
-    .getByRole("button", {
-      name: "Editar cadastro NOVA-CORRIGIDA",
-      exact: true,
-    })
+    .getByRole("button", { name: "Gerenciar Equipes", exact: true })
+    .click();
+  await a
+    .getByRole("dialog")
+    .getByRole("button", { name: /NOVA-CORRIGIDA/ })
     .click();
   await a
     .getByRole("combobox", { name: "Status", exact: true })

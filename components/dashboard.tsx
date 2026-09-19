@@ -3,13 +3,14 @@ import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import initialTeams from "@/lib/teams.json";
 import { type Team, COMPANIES } from "@/lib/team";
+import { CycleSummary } from "./cycle-summary";
+import { TeamManager } from "./team-manager";
 import { TeamEditor } from "./team-editor";
 import { cycleAt, formatTime } from "@/lib/cycle";
 import { getSupabase } from "@/lib/supabase";
 
 import {
   useNonConformities,
-  Metrics,
   NonConformityDialog,
   HistoryInsights,
 } from "./non-conformities";
@@ -38,6 +39,7 @@ export default function Dashboard() {
   const activeTeams = teams.filter((t) => t.active);
   const total = activeTeams.length;
   const [editor, setEditor] = useState<{ team: Team | null } | null>(null);
+  const [managing, setManaging] = useState(false);
   const [ncTeam, setNcTeam] = useState<Team | null>(null);
   const [cycle, setCycle] = useState<ReturnType<typeof cycleAt> | null>(null);
   const [rows, setRows] = useState<Inspection[]>([]);
@@ -356,7 +358,7 @@ export default function Dashboard() {
             <p className="subtitle">
               Escolha uma empresa para registrar a fiscalização.
             </p>
-            <Metrics
+            <CycleSummary
               values={[
                 {
                   label: "Fiscalizadas neste ciclo",
@@ -364,18 +366,21 @@ export default function Dashboard() {
                   tone: "success",
                 },
                 {
-                  label: "Ainda a fiscalizar",
+                  label: "A fiscalizar",
                   value: db && !loading ? total - done : "—",
                 },
                 {
-                  label: "NC em aberto · todos os ciclos",
+                  label: "NC em aberto",
+                  description: "Não conformidades em aberto em todos os ciclos",
                   value: nc.ready
                     ? nc.items.filter((n) => n.status === "open").length
                     : "—",
                   tone: "warning",
                 },
                 {
-                  label: "NC regularizadas · todos os ciclos",
+                  label: "NC regularizadas",
+                  description:
+                    "Não conformidades regularizadas em todos os ciclos",
                   value: nc.ready
                     ? nc.items.filter((n) => n.status === "resolved").length
                     : "—",
@@ -495,13 +500,22 @@ export default function Dashboard() {
               {activeTeams.filter((t) => t.company_id === company).length}{" "}
               equipes ativas · {cycle?.period}
             </p>
-            <button
-              className="add-team"
-              disabled={!db || loading || !online || !!error}
-              onClick={() => setEditor({ team: null })}
-            >
-              Adicionar Equipe
-            </button>
+            <div className="team-actions">
+              <button
+                className="add-team"
+                disabled={!db || loading || !online || !!error}
+                onClick={() => setEditor({ team: null })}
+              >
+                Adicionar Equipe
+              </button>
+              <button
+                className="add-team"
+                disabled={!db || loading || !online || !!error}
+                onClick={() => setManaging(true)}
+              >
+                Gerenciar Equipes
+              </button>
+            </div>
             <div
               className="tabs"
               role="tablist"
@@ -597,14 +611,6 @@ export default function Dashboard() {
                             ).length
                           : "—"}{" "}
                         em aberto
-                      </button>
-                      <button
-                        className="edit-team"
-                        aria-label={`Editar cadastro ${team.name}`}
-                        disabled={!db || loading || !online || !!error}
-                        onClick={() => setEditor({ team })}
-                      >
-                        Editar cadastro
                       </button>
                     </div>
                   );
@@ -771,6 +777,17 @@ export default function Dashboard() {
           ◷ <span>Histórico</span>
         </button>
       </nav>
+      {managing && company && (
+        <TeamManager
+          company={company}
+          teams={teams.filter((t) => t.company_id === company)}
+          close={() => setManaging(false)}
+          select={(team) => {
+            setManaging(false);
+            setEditor({ team });
+          }}
+        />
+      )}
       {editor && db && (
         <TeamEditor
           team={editor.team}

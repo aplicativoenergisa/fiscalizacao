@@ -899,3 +899,121 @@ dialog::backdrop {
     padding: 12px 8px;
   }
 }
+
+/* Compact home summary; history charts keep their existing styles. */
+.cycle-summary {
+  margin: 22px 0;
+  padding: 16px;
+  border: 1px solid #dfe7e5;
+  border-radius: 16px;
+  background: #fff;
+}
+.cycle-summary h2 {
+  margin: 0 0 14px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #193e34;
+}
+.cycle-summary-bars {
+  display: grid;
+  gap: 12px;
+}
+.cycle-summary-row {
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+.cycle-summary-label {
+  font-size: 12px;
+  line-height: 1.3;
+  color: #52655f;
+}
+.cycle-summary-row strong {
+  min-width: 2ch;
+  text-align: right;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  color: #193e34;
+}
+.cycle-summary-track {
+  display: block;
+  height: 8px;
+  background: #edf1ed;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.cycle-summary-track > span {
+  display: block;
+  height: 100%;
+  border-radius: 8px;
+  background: #698394;
+}
+.cycle-summary-row.success .cycle-summary-track > span {
+  background: #188365;
+}
+.cycle-summary-row.warning .cycle-summary-track > span {
+  background: #c58335;
+}
+@media (max-width: 380px) {
+  .cycle-summary {
+    padding: 14px;
+  }
+  .cycle-summary-row {
+    grid-template-columns: 130px minmax(0, 1fr) auto;
+    gap: 8px;
+  }
+  .cycle-summary-label {
+    font-size: 11px;
+  }
+}
+
+/* Team controls and finding emphasis are presentation-only. */
+.team-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.team-actions .add-team {
+  font-size: 13px;
+  padding: 12px 8px;
+}
+.team-manager {
+  max-height: 85dvh;
+  overflow-y: auto;
+}
+.team-manager-list {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0;
+}
+.team-manager-list > button {
+  text-align: left;
+  padding: 14px;
+  border: 1px solid #d9e3dd;
+  border-radius: 10px;
+  background: #f7faf8;
+  min-height: 56px;
+  color: #193e34;
+}
+.team-manager-list strong,
+.team-manager-list small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.team-manager-list small {
+  color: #52655f;
+  margin-top: 5px;
+}
+.nc-team-button {
+  background: #f4f6f4;
+  border-color: #dfe5df;
+  color: #617168;
+}
+.nc-team-button.nc-warning {
+  background: #ffb65b;
+  border-color: #dc8b24;
+  color: #542900;
+  font-weight: 700;
+}
