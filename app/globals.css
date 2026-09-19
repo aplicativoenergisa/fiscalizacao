@@ -1030,3 +1030,9 @@ dialog::backdrop {
   border-color: var(--green);
   color: white;
 }
+
+/* NC labels remain identifiable even when their bar has a zero value. */
+.cycle-summary-row:nth-child(3) .cycle-summary-label,
+.cycle-summary-row:nth-child(3) strong { color:#b42318; }
+.cycle-summary-row:nth-child(4) .cycle-summary-label,
+.cycle-summary-row:nth-child(4) strong { color:#188365; }
