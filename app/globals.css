@@ -1017,3 +1017,16 @@ dialog::backdrop {
   color: #542900;
   font-weight: 700;
 }
+
+.nc-dialog .nc-label-red {
+  color: #b42318;
+}
+.nc-dialog .nc-save {
+  background: #b42318;
+  color: white;
+}
+.nc-dialog .nc-finish {
+  background: var(--green);
+  border-color: var(--green);
+  color: white;
+}

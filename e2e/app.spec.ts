@@ -233,7 +233,7 @@ test("duas sessões mobile: marcar, Realtime simulado, recarregar, desfazer e hi
   await expect(
     a.getByText("Sinalização ausente", { exact: true }),
   ).toBeVisible();
-  await a.getByRole("button", { name: "Fechar", exact: true }).click();
+  await a.getByRole("button", { name: "Finalizar", exact: true }).click();
   await b.getByRole("tab", { name: /Finalizadas/ }).click();
   await expect(
     b.getByRole("button", { name: "Não conformidades · 2 em aberto" }),
@@ -246,7 +246,7 @@ test("duas sessões mobile: marcar, Realtime simulado, recarregar, desfazer e hi
     .first()
     .click();
   await expect(b.getByText("Regularizada", { exact: true })).toBeVisible();
-  await b.getByRole("button", { name: "Fechar", exact: true }).click();
+  await b.getByRole("button", { name: "Finalizar", exact: true }).click();
   await a.getByRole("tab", { name: /Finalizadas/ }).click();
   await expect(
     a.getByRole("button", { name: "Não conformidades · 1 em aberto" }),

@@ -189,7 +189,8 @@ export function NonConformityDialog({
             }}
           >
             <label htmlFor="nc-description">
-              Descrição da não conformidade
+              Descrição da{" "}
+              <span className="nc-label-red">não conformidade</span>
             </label>
             <textarea
               id="nc-description"
@@ -201,7 +202,7 @@ export function NonConformityDialog({
               rows={3}
             />
             <button
-              className="primary"
+              className="primary nc-save"
               disabled={busy || !online || !description.trim()}
             >
               Salvar não conformidade
@@ -236,8 +237,8 @@ export function NonConformityDialog({
           ))}
           {!items.length && <p>Nenhuma não conformidade registrada.</p>}
         </div>
-        <button className="cancel" disabled={busy} onClick={close}>
-          Fechar
+        <button className="cancel nc-finish" disabled={busy} onClick={close}>
+          Finalizar
         </button>
       </div>
     </dialog>
