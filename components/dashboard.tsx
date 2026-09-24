@@ -647,31 +647,34 @@ export default function Dashboard() {
             {loading || !db ? (
               <p role="status">Aguardando dados das equipes…</p>
             ) : (
-              companies.map((name) => (
-                <section
-                  className="all-teams-group"
-                  key={name}
-                  aria-label={name}
-                >
-                  <h2>{name}</h2>
-                  <ul>
-                    {teams
-                      .filter((team) => team.company_id === name)
-                      .map((team) => (
-                        <li key={team.id}>
-                          <span>{team.name}</span>
-                          {!team.active ? (
-                            <small>não ativa</small>
-                          ) : indexed.get(team.id)?.inspected_at ? (
-                            <span aria-label="Fiscalizada no ciclo atual">
-                              ✅
-                            </span>
-                          ) : null}
-                        </li>
-                      ))}
-                  </ul>
-                </section>
-              ))
+              [...companies]
+                .sort((a, b) => a.localeCompare(b, "pt-BR"))
+                .map((name) => (
+                  <section
+                    className="all-teams-group"
+                    key={name}
+                    aria-label={name}
+                  >
+                    <h2>{name}</h2>
+                    <ul>
+                      {teams
+                        .filter((team) => team.company_id === name)
+                        .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"))
+                        .map((team) => (
+                          <li key={team.id}>
+                            <span>{team.name}</span>
+                            {!team.active ? (
+                              <small>não ativa</small>
+                            ) : indexed.get(team.id)?.inspected_at ? (
+                              <span aria-label="Fiscalizada no ciclo atual">
+                                ✅
+                              </span>
+                            ) : null}
+                          </li>
+                        ))}
+                    </ul>
+                  </section>
+                ))
             )}
           </section>
         )}
