@@ -1089,3 +1089,12 @@ dialog::backdrop {
     white-space: nowrap;
   }
 }
+
+.nc-dialog .nc-resolved-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 16px 0;
+  font-size: 48px;
+  line-height: 1.2;
+}

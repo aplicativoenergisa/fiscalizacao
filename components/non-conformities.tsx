@@ -221,6 +221,11 @@ export function NonConformityDialog({
                 {n.status === "open" ? "Em aberto" : "Regularizada"}
               </strong>
               <p>{n.description}</p>
+              {n.status === "resolved" && (
+                <div className="nc-resolved-check" aria-hidden="true">
+                  ✅
+                </div>
+              )}
               <small>Aberta em {formatTime(n.opened_at)}</small>
               {n.resolved_at ? (
                 <small>Regularizada em {formatTime(n.resolved_at)}</small>
