@@ -1112,3 +1112,7 @@ dialog::backdrop {
   font-weight: 700;
   line-height: 1;
 }
+
+.nc-dialog .nc-item-resolved .nc-item-text > strong {
+  color: #188365;
+}
