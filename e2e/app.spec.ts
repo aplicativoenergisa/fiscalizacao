@@ -321,6 +321,20 @@ test("duas sessões mobile: marcar, Realtime simulado, recarregar, desfazer e hi
     a.locator("button.team").filter({ hasText: "NOVA-CORRIGIDA" }),
   ).toBeVisible();
   await expect(b.getByText("4 empresas · 43 equipes ativas")).toBeVisible();
+  await b.getByRole("button", { name: "Todas Equipes", exact: true }).click();
+  const inactiveTeam = b
+    .locator(".all-teams li")
+    .filter({ hasText: "NOVA-CORRIGIDA" });
+  await expect(inactiveTeam).toHaveText("NOVA-CORRIGIDA— não ativa");
+  await expect(
+    inactiveTeam.getByLabel("Fiscalizada no ciclo atual"),
+  ).toHaveCount(0);
+  await b.screenshot({
+    path: "test-results/inactive-team-mobile.png",
+    fullPage: true,
+  });
+  await b.getByRole("button", { name: /Empresas/ }).click();
+
   await a
     .getByRole("button", { name: "Gerenciar Equipes", exact: true })
     .click();

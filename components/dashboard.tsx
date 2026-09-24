@@ -664,7 +664,7 @@ export default function Dashboard() {
                           <li key={team.id}>
                             <span>{team.name}</span>
                             {!team.active ? (
-                              <small>não ativa</small>
+                              <small>— não ativa</small>
                             ) : indexed.get(team.id)?.inspected_at ? (
                               <span aria-label="Fiscalizada no ciclo atual">
                                 ✅

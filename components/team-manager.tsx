@@ -20,7 +20,10 @@ export function TeamManager({
     <dialog ref={dialog} aria-labelledby="team-manager-title" onCancel={close}>
       <div className="dialog-content team-manager">
         <h2 id="team-manager-title">Gerenciar Equipes · {company}</h2>
-        <p>Selecione uma equipe para editar seu cadastro.</p>
+        <p>
+          Selecione uma equipe para editar o cadastro ou alterar o status
+          Ativa/Inativa.
+        </p>
         <div className="team-manager-list">
           {teams.map((team) => (
             <button key={team.id} onClick={() => select(team)}>
