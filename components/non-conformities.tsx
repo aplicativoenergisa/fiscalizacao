@@ -216,27 +216,32 @@ export function NonConformityDialog({
         )}
         <div className="nc-list">
           {items.map((n) => (
-            <article className="nc-item" key={n.id}>
-              <strong className={n.status === "open" ? "nc-warning" : ""}>
-                {n.status === "open" ? "Em aberto" : "Regularizada"}
-              </strong>
-              <p>{n.description}</p>
+            <article
+              className={`nc-item ${n.status === "resolved" ? "nc-item-resolved" : ""}`}
+              key={n.id}
+            >
+              <div className="nc-item-text">
+                <strong className={n.status === "open" ? "nc-warning" : ""}>
+                  {n.status === "open" ? "Em aberto" : "Regularizada"}
+                </strong>
+                <p>{n.description}</p>
+                <small>Aberta em {formatTime(n.opened_at)}</small>
+                {n.resolved_at ? (
+                  <small>Regularizada em {formatTime(n.resolved_at)}</small>
+                ) : (
+                  <button
+                    className="cancel"
+                    disabled={busy || !online}
+                    onClick={() => void save(n.id)}
+                  >
+                    Marcar como regularizada
+                  </button>
+                )}
+              </div>
               {n.status === "resolved" && (
-                <div className="nc-resolved-check" aria-hidden="true">
-                  ✅
-                </div>
-              )}
-              <small>Aberta em {formatTime(n.opened_at)}</small>
-              {n.resolved_at ? (
-                <small>Regularizada em {formatTime(n.resolved_at)}</small>
-              ) : (
-                <button
-                  className="cancel"
-                  disabled={busy || !online}
-                  onClick={() => void save(n.id)}
-                >
-                  Marcar como regularizada
-                </button>
+                <span className="nc-resolved-check" aria-hidden="true">
+                  ✓
+                </span>
               )}
             </article>
           ))}

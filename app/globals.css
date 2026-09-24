@@ -1090,11 +1090,25 @@ dialog::backdrop {
   }
 }
 
+.nc-dialog .nc-item-resolved {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 40px;
+  align-items: center;
+  gap: 14px;
+}
+.nc-dialog .nc-item-text {
+  min-width: 0;
+}
 .nc-dialog .nc-resolved-check {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 16px 0;
-  font-size: 48px;
-  line-height: 1.2;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #e6f4eb;
+  color: #188365;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
 }
