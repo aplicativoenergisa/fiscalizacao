@@ -1116,3 +1116,71 @@ dialog::backdrop {
 .nc-dialog .nc-item-resolved .nc-item-text > strong {
   color: #188365;
 }
+
+.team-search {
+  margin: 22px 0;
+}
+.team-search label {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.team-search input {
+  width: 100%;
+  min-height: 44px;
+  padding: 12px 14px;
+  border: 1px solid #b9c9c0;
+  border-radius: 12px;
+  background: white;
+  font: inherit;
+}
+.team-suggestions {
+  margin-top: 8px;
+  max-height: 280px;
+  overflow-y: auto;
+  border: 1px solid #dfe7e5;
+  border-radius: 12px;
+  background: white;
+}
+.team-suggestions ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.team-suggestions button {
+  width: 100%;
+  text-align: left;
+  padding: 12px 14px;
+  border: 0;
+  border-bottom: 1px solid #edf1ed;
+  background: transparent;
+  color: var(--ink);
+  min-height: 48px;
+}
+.team-suggestions strong,
+.team-suggestions small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.team-suggestions small {
+  color: var(--muted);
+  margin-top: 4px;
+}
+.team-suggestions p {
+  padding: 12px;
+}
+.team-history h1 {
+  overflow-wrap: anywhere;
+}
+.team-history h2 {
+  margin-top: 26px;
+  font-size: 20px;
+}
+.team-history .hint {
+  text-align: left;
+  margin: 10px 0 16px;
+}
+.team-history-resolved {
+  color: #188365;
+}

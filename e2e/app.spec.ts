@@ -287,7 +287,10 @@ test("duas sessões mobile: marcar, Realtime simulado, recarregar, desfazer e hi
       fullPage: true,
     });
   }
-  await b.getByRole("button", { name: /Empresas/ }).click();
+  await b
+    .locator(".bottom-nav")
+    .getByRole("button", { name: /Empresas/ })
+    .click();
   await b
     .getByRole("button", { name: "Adicionar Equipe", exact: true })
     .click();
@@ -299,7 +302,10 @@ test("duas sessões mobile: marcar, Realtime simulado, recarregar, desfazer e hi
   await form.getByRole("button", { name: "Salvar equipe" }).click();
   await expect(form).toHaveCount(0);
   await expect(b.getByText("4 empresas · 44 equipes ativas")).toBeVisible();
-  await a.getByRole("button", { name: /Empresas/ }).click();
+  await a
+    .locator(".bottom-nav")
+    .getByRole("button", { name: /Empresas/ })
+    .click();
   await a.getByRole("button", { name: /Logo RALT/ }).click();
   await expect(
     a.locator("button.team").filter({ hasText: "NOVA-TESTE" }),
@@ -333,7 +339,23 @@ test("duas sessões mobile: marcar, Realtime simulado, recarregar, desfazer e hi
     path: "test-results/inactive-team-mobile.png",
     fullPage: true,
   });
-  await b.getByRole("button", { name: /Empresas/ }).click();
+  await b
+    .locator(".bottom-nav")
+    .getByRole("button", { name: /Empresas/ })
+    .click();
+  await b
+    .getByRole("searchbox", { name: "Buscar equipe", exact: true })
+    .fill("NOVA-CORRIGIDA");
+  await b.locator(".team-suggestions button").click();
+  await expect(b.locator(".team-history .subtitle")).toHaveText(
+    "RALT · Inativa",
+  );
+  await expect(b.locator(".team-history .event")).toHaveCount(0);
+
+  await b
+    .locator(".bottom-nav")
+    .getByRole("button", { name: /Empresas/ })
+    .click();
 
   await a
     .getByRole("button", { name: "Gerenciar Equipes", exact: true })
@@ -371,8 +393,52 @@ test("duas sessões mobile: marcar, Realtime simulado, recarregar, desfazer e hi
       fullPage: true,
     });
   }
-  await b.getByRole("button", { name: /Empresas/ }).click();
+  await b
+    .locator(".bottom-nav")
+    .getByRole("button", { name: /Empresas/ })
+    .click();
   await b.screenshot({ path: "test-results/home.png", fullPage: true });
+  // Isolated extra team data must never appear in the searched team's history.
+  const currentCycle = (
+    await db.query<{ c: string }>("select current_inspection_cycle() c")
+  ).rows[0].c;
+  await db.query("select set_inspection(1,$1,'inspect',0,$2)", [
+    currentCycle,
+    crypto.randomUUID(),
+  ]);
+  await db.query("select open_non_conformity($1,1,'NC DE OUTRA EQUIPE')", [
+    crypto.randomUUID(),
+  ]);
+  subscribers.forEach((send) => send("non_conformities"));
+  for (const page of [a, b]) {
+    await page
+      .locator(".bottom-nav")
+      .getByRole("button", { name: /Empresas/ })
+      .click();
+    await page
+      .getByRole("searchbox", { name: "Buscar equipe", exact: true })
+      .fill("ral-b2 01");
+    await page
+      .locator(".team-suggestions button")
+      .filter({ hasText: "RAL-B2 01" })
+      .click();
+    await expect(page.locator(".team-history h1")).toHaveText("RAL-B2 01");
+    await expect(page.locator(".team-history .event")).toHaveCount(2);
+    await expect(page.locator(".team-history .nc-item")).toHaveCount(2);
+    await expect(page.locator(".team-history")).not.toContainText(
+      "NC DE OUTRA EQUIPE",
+    );
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    await page.screenshot({
+      path: `test-results/team-history-${page === a ? "iphone" : "android"}.png`,
+      fullPage: true,
+    });
+  }
+
   const manifest = await (await b.request.get("/manifest.json")).json();
   expect(manifest.display).toBe("standalone");
   expect(manifest.icons).toHaveLength(3);

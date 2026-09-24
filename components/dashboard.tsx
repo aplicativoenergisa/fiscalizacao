@@ -5,6 +5,7 @@ import initialTeams from "@/lib/teams.json";
 import { type Team, COMPANIES } from "@/lib/team";
 import { CycleSummary } from "./cycle-summary";
 import { TeamManager } from "./team-manager";
+import { TeamSearch, TeamHistory } from "./team-history";
 import { TeamEditor } from "./team-editor";
 import { cycleAt, formatTime } from "@/lib/cycle";
 import { getSupabase } from "@/lib/supabase";
@@ -44,10 +45,12 @@ export default function Dashboard() {
   const [cycle, setCycle] = useState<ReturnType<typeof cycleAt> | null>(null);
   const [rows, setRows] = useState<Inspection[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
+  const [historyTeamId, setHistoryTeamId] = useState<number | null>(null);
+  const historyTeam = teams.find((t) => t.id === historyTeamId);
   const [company, setCompany] = useState<string | null>(null);
-  const [page, setPage] = useState<"companies" | "all-teams" | "history">(
-    "companies",
-  );
+  const [page, setPage] = useState<
+    "companies" | "all-teams" | "history" | "team-history"
+  >("companies");
   const [tab, setTab] = useState<"pending" | "done" | "inactive">("pending");
   const [loading, setLoading] = useState(true),
     [busy, setBusy] = useState(false);
@@ -424,6 +427,15 @@ export default function Dashboard() {
                   : "Aguardando dados do Supabase"}
               </p>
             </section>
+            <TeamSearch
+              teams={teams}
+              ready={!!db && !loading && !error}
+              select={(id) => {
+                setHistoryTeamId(id);
+                setPage("team-history");
+                setNotice("");
+              }}
+            />
             <div className="section-title">
               <h2>Empresas</h2>
               <button
@@ -639,6 +651,20 @@ export default function Dashboard() {
               </div>
             )}
           </>
+        )}
+        {page === "team-history" && historyTeam && (
+          <TeamHistory
+            key={historyTeam.id}
+            team={historyTeam}
+            db={db}
+            items={nc.items}
+            ncReady={nc.ready}
+            ncError={nc.error}
+            back={() => {
+              setPage("companies");
+              setCompany(null);
+            }}
+          />
         )}
         {page === "all-teams" && (
           <section className="all-teams" aria-labelledby="all-teams-title">
