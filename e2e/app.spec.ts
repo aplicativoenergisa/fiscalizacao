@@ -337,6 +337,27 @@ test("duas sessões mobile: marcar, Realtime simulado, recarregar, desfazer e hi
     a.locator("button.team").filter({ hasText: "NOVA-CORRIGIDA" }),
   ).toBeVisible();
   await expect(b.getByText("4 empresas · 44 equipes ativas")).toBeVisible();
+  for (const page of [a, b]) {
+    await page
+      .getByRole("button", { name: "Todas Equipes", exact: true })
+      .click();
+    await expect(page.locator(".all-teams-group")).toHaveCount(4);
+    await expect(page.locator(".all-teams li")).toHaveCount(44);
+    await expect(
+      page.locator(".all-teams li").filter({ hasText: "NOVA-CORRIGIDA" }),
+    ).toHaveText("NOVA-CORRIGIDA");
+    await expect(page.locator(".all-teams button")).toHaveCount(0);
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    await page.screenshot({
+      path: `test-results/all-teams-${page === a ? "iphone" : "android"}.png`,
+      fullPage: true,
+    });
+  }
+  await b.getByRole("button", { name: /Empresas/ }).click();
   await b.screenshot({ path: "test-results/home.png", fullPage: true });
   const manifest = await (await b.request.get("/manifest.json")).json();
   expect(manifest.display).toBe("standalone");

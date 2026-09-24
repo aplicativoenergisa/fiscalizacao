@@ -1033,6 +1033,59 @@ dialog::backdrop {
 
 /* NC labels remain identifiable even when their bar has a zero value. */
 .cycle-summary-row:nth-child(3) .cycle-summary-label,
-.cycle-summary-row:nth-child(3) strong { color:#b42318; }
+.cycle-summary-row:nth-child(3) strong {
+  color: #b42318;
+}
 .cycle-summary-row:nth-child(4) .cycle-summary-label,
-.cycle-summary-row:nth-child(4) strong { color:#188365; }
+.cycle-summary-row:nth-child(4) strong {
+  color: #188365;
+}
+
+.all-teams-group {
+  margin: 22px 0;
+}
+.all-teams-group h2 {
+  font-size: 15px;
+  margin: 0 0 8px;
+  color: var(--ink);
+}
+.all-teams-group ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.all-teams-group li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 7px 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+.all-teams-group li > span:first-child {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.all-teams-group small {
+  color: var(--muted);
+  white-space: nowrap;
+  font-size: 12px;
+}
+@media (max-width: 600px) {
+  .bottom-nav {
+    gap: 4px;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  .bottom-nav button {
+    flex: 1;
+    min-width: 0;
+    width: auto;
+    gap: 5px;
+    font-size: 18px;
+  }
+  .bottom-nav button span {
+    font-size: 12px;
+    white-space: nowrap;
+  }
+}

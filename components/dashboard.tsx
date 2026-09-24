@@ -45,7 +45,9 @@ export default function Dashboard() {
   const [rows, setRows] = useState<Inspection[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [company, setCompany] = useState<string | null>(null);
-  const [page, setPage] = useState<"companies" | "history">("companies");
+  const [page, setPage] = useState<"companies" | "all-teams" | "history">(
+    "companies",
+  );
   const [tab, setTab] = useState<"pending" | "done" | "inactive">("pending");
   const [loading, setLoading] = useState(true),
     [busy, setBusy] = useState(false);
@@ -638,6 +640,41 @@ export default function Dashboard() {
             )}
           </>
         )}
+        {page === "all-teams" && (
+          <section className="all-teams" aria-labelledby="all-teams-title">
+            <h1 id="all-teams-title">Todas Equipes</h1>
+            <p className="subtitle">Ciclo atual · {cycle?.period}</p>
+            {loading || !db ? (
+              <p role="status">Aguardando dados das equipes…</p>
+            ) : (
+              companies.map((name) => (
+                <section
+                  className="all-teams-group"
+                  key={name}
+                  aria-label={name}
+                >
+                  <h2>{name}</h2>
+                  <ul>
+                    {teams
+                      .filter((team) => team.company_id === name)
+                      .map((team) => (
+                        <li key={team.id}>
+                          <span>{team.name}</span>
+                          {!team.active ? (
+                            <small>não ativa</small>
+                          ) : indexed.get(team.id)?.inspected_at ? (
+                            <span aria-label="Fiscalizada no ciclo atual">
+                              ✅
+                            </span>
+                          ) : null}
+                        </li>
+                      ))}
+                  </ul>
+                </section>
+              ))
+            )}
+          </section>
+        )}
         {page === "history" && (
           <>
             <div className="eyebrow">REGISTROS PRESERVADOS</div>
@@ -766,6 +803,15 @@ export default function Dashboard() {
           }}
         >
           ▦ <span>Empresas</span>
+        </button>
+        <button
+          aria-current={page === "all-teams" ? "page" : undefined}
+          onClick={() => {
+            setPage("all-teams");
+            setSelected(null);
+          }}
+        >
+          <span>Todas Equipes</span>
         </button>
         <button
           aria-current={page === "history" ? "page" : undefined}
